@@ -46,13 +46,13 @@ function bindFilters() {
 }
 
 async function loadPublicData() {
-  setQuestionsState("Loading Questions...");
+  setQuestionsState("جاري تحميل الأسئلة...");
   try {
     const [q, ch, cat, settings] = await Promise.all([
       db.from("questions").select("id,title,question_text,answer,explanation,chapter_id,category_id,image_url,video_url,code,created_at").eq("published", true).order("created_at", { ascending: false }),
       db.from("chapters").select("id,title,description,display_order,created_at").order("display_order", { ascending: true }),
       db.from("categories").select("id,name,slug,description,created_at").order("name", { ascending: true }),
-      db.from("site_settings").select("key,value").in("key", ["site_name","site_description","whatsapp_number","whatsapp_message","contact_email","footer_text"])
+      db.from("site_settings").select("key,value").in("key", ["site_name","site_description","whatsapp_number","whatsapp_message","contact_email","footer_text","developer_name","developer_text","developer_contact"])
     ]);
     if (q.error) throw q.error;
     if (ch.error) throw ch.error;
@@ -69,11 +69,12 @@ async function loadPublicData() {
     renderChapters();
     renderStats();
     renderContact();
-    $("#footerText").textContent = state.settings.footer_text || "© 2026 Question Archive";
+    renderDeveloper();
+    $("#footerText").textContent = state.settings.footer_text || "© 2026 أرشيف الأسئلة";
   } catch (error) {
     console.error(error);
     setQuestionsState("تعذر تحميل الأرشيف الآن. حاول تحديث الصفحة.");
-    toast("تعذر تحميل البيانات. تأكد من إعداد Supabase وRLS.");
+    toast("تعذر تحميل البيانات. راجع إعدادات Supabase وصلاحيات قاعدة البيانات.");
   }
 }
 
@@ -84,9 +85,9 @@ function renderStats() {
 }
 
 function renderFilters() {
-  $("#chapterFilter").innerHTML = `<option value="">ALL CHAPTERS</option>` +
+  $("#chapterFilter").innerHTML = `<option value="">كل الفصول</option>` +
     state.chapters.map(c => `<option value="${escapeAttr(c.id)}">${escapeHtml(c.title)}</option>`).join("");
-  $("#categoryFilter").innerHTML = `<option value="">ALL CATEGORIES</option>` +
+  $("#categoryFilter").innerHTML = `<option value="">كل التصنيفات</option>` +
     state.categories.map(c => `<option value="${escapeAttr(c.id)}">${escapeHtml(c.name)}</option>`).join("");
 }
 
@@ -106,7 +107,7 @@ function renderQuestions() {
 
   if (!list.length) {
     $("#questionsGrid").innerHTML = "";
-    setQuestionsState(search || chapterId || categoryId ? "NO RESULTS FOUND" : "NO QUESTIONS FOUND");
+    setQuestionsState(search || chapterId || categoryId ? "لا توجد نتائج" : "لا توجد أسئلة");
     return;
   }
   setQuestionsState("");
@@ -120,19 +121,19 @@ function questionCard(q) {
   const video = buildVideo(q.video_url);
   const code = q.code ? `<pre class="answer-box" id="code-${q.id}"><code>${escapeHtml(q.code)}</code></pre>` : "";
   return `<article class="question-card">
-    <div class="card-meta"><span>${escapeHtml(chapter?.title || "ARCHIVE")}</span><span>${escapeHtml(category?.name || "QUESTION")}</span></div>
+    <div class="card-meta"><span>${escapeHtml(chapter?.title || "الأرشيف")}</span><span>${escapeHtml(category?.name || "سؤال")}</span></div>
     <h3>${escapeHtml(q.title)}</h3>
     <div class="question-text">${escapeHtml(q.question_text || "")}</div>
     ${image}${video}
     <div class="card-actions">
-      <button class="mini-btn" type="button" onclick="toggleBox('answer-${q.id}')">SHOW ANSWER</button>
-      <button class="mini-btn" type="button" onclick="toggleBox('explanation-${q.id}')">SHOW EXPLANATION</button>
-      ${q.code ? `<button class="mini-btn" type="button" onclick="toggleBox('code-${q.id}')">SHOW CODE</button>` : ""}
-      <button class="mini-btn" type="button" onclick="copyQuestion('${q.id}')">COPY QUESTION</button>
-      <button class="mini-btn danger" type="button" onclick="reportQuestion('${q.id}')">REPORT / CONTACT</button>
+      <button class="mini-btn" type="button" onclick="toggleBox('answer-${q.id}')">عرض الإجابة</button>
+      <button class="mini-btn" type="button" onclick="toggleBox('explanation-${q.id}')">عرض الشرح</button>
+      ${q.code ? `<button class="mini-btn" type="button" onclick="toggleBox('code-${q.id}')">عرض الكود</button>` : ""}
+      <button class="mini-btn" type="button" onclick="copyQuestion('${q.id}')">نسخ السؤال</button>
+      <button class="mini-btn danger" type="button" onclick="reportQuestion('${q.id}')">إبلاغ / تواصل</button>
     </div>
-    <div class="answer-box" id="answer-${q.id}">${escapeHtml(q.answer || "No answer available.")}</div>
-    <div class="explanation-box" id="explanation-${q.id}">${escapeHtml(q.explanation || "No explanation available.")}</div>
+    <div class="answer-box" id="answer-${q.id}">${escapeHtml(q.answer || "لا توجد إجابة مضافة حاليًا.")}</div>
+    <div class="explanation-box" id="explanation-${q.id}">${escapeHtml(q.explanation || "لا يوجد شرح مضاف حاليًا.")}</div>
     ${code}
   </article>`;
 }
@@ -142,7 +143,7 @@ function buildVideo(url) {
   const safe = escapeAttr(url);
   const youtube = getYouTubeId(url);
   if (youtube) return `<iframe class="media-video" src="https://www.youtube.com/embed/${encodeURIComponent(youtube)}" title="Question video" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
-  return `<video class="media-video" controls preload="none"><source src="${safe}">Your browser does not support video.</video>`;
+  return `<video class="media-video" controls preload="none"><source src="${safe}">المتصفح لا يدعم تشغيل الفيديو.</video>`;
 }
 
 function getYouTubeId(url) {
@@ -165,7 +166,7 @@ function renderChapters() {
     return `<article class="chapter-card" onclick="selectChapter('${c.id}')">
       <div class="no">CHAPTER ${String(i + 1).padStart(2, "0")}</div>
       <h3>${escapeHtml(c.title)}</h3>
-      <p>${escapeHtml(c.description || "Archive chapter")} · ${count} question${count === 1 ? "" : "s"}</p>
+      <p>${escapeHtml(c.description || "فصل من الأرشيف")} · ${count} سؤال</p>
     </article>`;
   }).join("");
 }
@@ -176,14 +177,33 @@ function selectChapter(id) {
   renderQuestions();
 }
 
+function renderDeveloper() {
+  const name = state.settings.developer_name || "فريق QUESTION ARCHIVE";
+  const text = state.settings.developer_text || "الموقع ده معمول علشان يسهّل المراجعة وتنظيم الأسئلة للطلاب بطريقة بسيطة وسريعة.";
+  const contact = (state.settings.developer_contact || "").trim();
+  $("#developerName").textContent = name;
+  $("#developerText").textContent = text;
+  const link = $("#developerContact");
+  if (link) {
+    if (contact) {
+      link.hidden = false;
+      link.href = contact;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    } else {
+      link.hidden = true;
+    }
+  }
+}
+
 function renderContact() {
   const number = (state.settings.whatsapp_number || "").replace(/[^\d]/g, "");
-  const message = state.settings.whatsapp_message || "Hello, I found a problem with a question.";
+  const message = state.settings.whatsapp_message || "أهلًا، لقيت مشكلة في أحد الأسئلة.";
   const email = state.settings.contact_email || "";
   let html = "";
-  if (number) html += `<a class="btn btn-gold" target="_blank" rel="noopener noreferrer" href="https://wa.me/${number}?text=${encodeURIComponent(message)}">WHATSAPP</a>`;
-  if (email) html += `<a class="btn" href="mailto:${escapeAttr(email)}">EMAIL</a>`;
-  $("#contactActions").innerHTML = html || `<span class="state-message">Contact options are currently unavailable.</span>`;
+  if (number) html += `<a class="btn btn-gold" target="_blank" rel="noopener noreferrer" href="https://wa.me/${number}?text=${encodeURIComponent(message)}">واتساب</a>`;
+  if (email) html += `<a class="btn" href="mailto:${escapeAttr(email)}">البريد الإلكتروني</a>`;
+  $("#contactActions").innerHTML = html || `<span class="state-message">خيارات التواصل غير متاحة حاليًا.</span>`;
 }
 
 window.toggleBox = (id) => {
@@ -197,9 +217,9 @@ window.copyQuestion = async (id) => {
   const text = `${q.title}\n\n${q.question_text}`;
   try {
     await navigator.clipboard.writeText(text);
-    toast("Question copied successfully.");
+    toast("تم نسخ السؤال بنجاح.");
   } catch (_) {
-    toast("Clipboard is not available in this browser.");
+    toast("النسخ غير متاح في المتصفح ده.");
   }
 };
 
@@ -207,8 +227,8 @@ window.reportQuestion = (id) => {
   const q = state.questions.find(x => String(x.id) === String(id));
   if (!q) return;
   const number = (state.settings.whatsapp_number || "").replace(/[^\d]/g, "");
-  if (!number) { toast("WhatsApp contact is not configured."); return; }
-  const message = `Hello, I found a problem with:\n\nQuestion #${q.id}\n${q.title}`;
+  if (!number) { toast("رقم واتساب مش مضاف حاليًا."); return; }
+  const message = `أهلًا، لقيت مشكلة في:\n\nQuestion #${q.id}\n${q.title}`;
   window.open(`https://wa.me/${number}?text=${encodeURIComponent(message)}`, "_blank", "noopener");
 };
 
@@ -236,4 +256,5 @@ window.addEventListener("qa-language-change", () => {
   if (typeof renderQuestions === "function") renderQuestions();
   if (typeof renderChapters === "function") renderChapters();
   if (typeof renderContact === "function") renderContact();
+  if (typeof renderDeveloper === "function") renderDeveloper();
 });
