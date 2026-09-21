@@ -26,10 +26,10 @@
       </a>
       <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
       <nav class="main-nav" id="mainNav">
-        <a href="#home" data-i18n="HOME">HOME</a>
-        <a href="#chapters" data-i18n="CHAPTERS">CHAPTERS</a>
-        <a href="#questions" data-i18n="QUESTIONS">QUESTIONS</a>
-        <a href="#contact" data-i18n="CONTACT">CONTACT</a>
+        <a href="#home" data-i18n="HOME">الرئيسية</a>
+        <a href="#chapters" data-i18n="CHAPTERS">الفصول</a>
+        <a href="#questions" data-i18n="QUESTIONS">الأسئلة</a>
+        <a href="#contact" data-i18n="CONTACT">تواصل معنا</a>
       </nav>
     </div>
   </header>
@@ -38,7 +38,7 @@
     <section class="hero section">
       <div class="container hero-grid">
         <div class="hero-copy reveal">
-          <p class="eyebrow">CASE FILE 001 · EDUCATIONAL ARCHIVE</p>
+          <p class="eyebrow">ملف رقم 001 · الأرشيف التعليمي</p>
           <h1>QUESTION<br><span>ARCHIVE</span></h1>
           <p class="hero-lead">A PLACE FOR QUESTIONS,<br>ANSWERS &amp; EXPLANATIONS.</p>
           <p class="hero-description">أرشيف تعليمي شخصي لتنظيم الأسئلة والفصول والشروحات في تجربة هادئة مستوحاة من الملفات القديمة.</p>
@@ -49,7 +49,7 @@
             <div class="file-top"><span>ARCHIVE FILE</span><span>NO. 001</span></div>
             <div class="file-stamp">OPEN<br>ARCHIVE</div>
             <div class="file-lines">
-              <span>QUESTIONS</span><i></i>
+              <span>الأسئلة</span><i></i>
               <span>ANSWERS</span><i></i>
               <span>EXPLANATIONS</span><i></i>
               <span>REFERENCE</span><i></i>
@@ -71,20 +71,20 @@
     <section class="section" id="questions">
       <div class="container">
         <div class="section-heading">
-          <div><p class="eyebrow">THE MAIN FILES</p><h2>QUESTIONS</h2></div>
-          <span class="section-number">01 / 04</span>
+          <div><p class="eyebrow">THE MAIN FILES</p><h2>الأسئلة</h2></div>
+          <span class="section-number">01 / 05</span>
         </div>
 
         <div class="controls">
           <label class="search-box">
             <span>⌕</span>
-            <input id="searchInput" type="search" placeholder="ابحث في الأسئلة..." autocomplete="off">
+            <input id="searchInput" type="search" placeholder="ابحث عن سؤال أو فصل أو تصنيف..." autocomplete="off">
           </label>
-          <select id="chapterFilter" aria-label="Filter by chapter"><option value="">ALL CHAPTERS</option></select>
-          <select id="categoryFilter" aria-label="Filter by category"><option value="">ALL CATEGORIES</option></select>
+          <select id="chapterFilter" aria-label="التصفية حسب الفصل"><option value="">كل الفصول</option></select>
+          <select id="categoryFilter" aria-label="التصفية حسب التصنيف"><option value="">كل التصنيفات</option></select>
         </div>
 
-        <div id="questionsState" class="state-message">Loading Questions...</div>
+        <div id="questionsState" class="state-message">جاري تحميل الأسئلة...</div>
         <div id="questionsGrid" class="questions-grid"></div>
       </div>
     </section>
@@ -92,8 +92,8 @@
     <section class="section chapters-section" id="chapters">
       <div class="container">
         <div class="section-heading">
-          <div><p class="eyebrow">INDEX OF FILES</p><h2>CHAPTERS</h2></div>
-          <span class="section-number">02 / 04</span>
+          <div><p class="eyebrow">INDEX OF FILES</p><h2>الفصول</h2></div>
+          <span class="section-number">02 / 05</span>
         </div>
         <div id="chaptersGrid" class="chapters-grid"></div>
       </div>
@@ -101,8 +101,8 @@
 
     <section class="section about-section">
       <div class="container about-grid">
-        <div><p class="eyebrow">ABOUT THE ARCHIVE</p><h2>EVERY QUESTION<br>HAS A FILE.</h2></div>
-        <p>QUESTION ARCHIVE هو مساحة منظمة للمراجعة وحفظ الأسئلة. بدل البحث العشوائي، كل سؤال يعيش داخل ملف واضح مرتبط بفصل وتصنيف، مع إجابة وشرح ووسائط عند الحاجة.</p>
+        <div><p class="eyebrow">عن الأرشيف</p><h2>كل سؤال<br>له ملف.</h2></div>
+        <p>QUESTION ARCHIVE مساحة بسيطة للطلاب علشان يلاقوا الأسئلة والمراجعات والشروحات في مكان واحد، وكل سؤال متقسم حسب الفصل والتصنيف ومعاه الإجابة والشرح والصور أو الفيديو لو موجودين.</p>
       </div>
     </section>
 
@@ -111,19 +111,32 @@
         <div>
           <p class="eyebrow">FINAL NOTE</p>
           <h2>FOUND A PROBLEM?</h2>
-          <p>لو وجدت خطأ أو مشكلة في أحد الملفات، يمكنك التواصل مباشرة مع الإدارة.</p>
+          <p>لو لقيت خطأ في سؤال أو عندك مشكلة في المحتوى، كلمنا مباشرة من خلال وسائل التواصل الموجودة هنا.</p>
         </div>
         <div class="contact-actions" id="contactActions">
-          <span class="state-message">Loading contact...</span>
+          <span class="state-message">جاري تحميل بيانات التواصل...</span>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="site-footer">
+  <section class="section developer-section" id="developer">
+      <div class="container developer-box">
+        <div>
+          <p class="eyebrow">من المطوّر</p>
+          <h2 id="developerName">فريق QUESTION ARCHIVE</h2>
+        </div>
+        <div class="developer-copy">
+          <p id="developerText">الموقع ده معمول علشان يسهّل المراجعة وتنظيم الأسئلة للطلاب بطريقة بسيطة وسريعة.</p>
+          <a id="developerContact" class="btn" href="#contact" hidden>تواصل مع المطوّر</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
     <div class="container footer-grid">
       <div><strong>QUESTION ARCHIVE</strong><span id="footerText">© 2026 Question Archive</span></div>
-      <a href="#contact" data-i18n="CONTACT">CONTACT</a>
+      <a href="#contact" data-i18n="CONTACT">تواصل معنا</a>
     </div>
   </footer>
 
@@ -135,3 +148,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+o
