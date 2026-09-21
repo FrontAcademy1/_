@@ -18,7 +18,7 @@
       <p>Sign in with your Supabase administrator account.</p>
       <label>Email<input id="loginEmail" type="email" autocomplete="username" required></label>
       <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-      <button class="primary" id="loginBtn" type="submit">LOGIN</button>
+      <button class="primary" id="loginBtn" type="submit" data-i18n="LOGIN">LOGIN</button>
       <div id="loginMessage" class="form-message"></div>
       <a class="back-link" href="index.html">← RETURN TO ARCHIVE</a>
     </form>
@@ -28,14 +28,14 @@
     <aside class="sidebar">
       <div class="side-brand"><span>QA</span><div><strong>QUESTION</strong><small>ARCHIVE / ADMIN</small></div></div>
       <nav>
-        <button class="side-link active" data-section="dashboard">DASHBOARD</button>
-        <button class="side-link" data-section="questions">QUESTIONS</button>
-        <button class="side-link" data-section="chapters">CHAPTERS</button>
-        <button class="side-link" data-section="categories">CATEGORIES</button>
-        <button class="side-link" data-section="settings">SETTINGS</button>
-        <button class="side-link" data-section="account">ACCOUNT</button>
+        <button class="side-link active" data-section="dashboard" data-i18n="DASHBOARD">DASHBOARD</button>
+        <button class="side-link" data-section="questions" data-i18n="QUESTIONS">QUESTIONS</button>
+        <button class="side-link" data-section="chapters" data-i18n="CHAPTERS">CHAPTERS</button>
+        <button class="side-link" data-section="categories" data-i18n="CATEGORIES">CATEGORIES</button>
+        <button class="side-link" data-section="settings" data-i18n="SETTINGS">SETTINGS</button>
+        <button class="side-link" data-section="account" data-i18n="ACCOUNT">ACCOUNT</button>
       </nav>
-      <button id="logoutBtn" class="logout">LOGOUT</button>
+      <button id="logoutBtn" class="logout" data-i18n="LOGOUT">LOGOUT</button>
     </aside>
 
     <main class="admin-main">
@@ -82,7 +82,7 @@
       </section>
 
       <section id="section-account" class="panel-section">
-        <div class="panel-card account-card"><p class="eyebrow">AUTHENTICATED SESSION</p><h3 id="accountEmail">—</h3><p id="accountRole">Role: —</p><button class="danger-btn" id="accountLogout">LOGOUT</button></div>
+        <div class="panel-card account-card"><p class="eyebrow">AUTHENTICATED SESSION</p><h3 id="accountEmail">—</h3><p id="accountRole">Role: —</p><button class="danger-btn" id="accountLogout" data-i18n="LOGOUT">LOGOUT</button></div>
       </section>
     </main>
   </div>
@@ -91,6 +91,7 @@
   <div id="toastRegion" class="toast-region"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="i18n.js"></script>
   <script src="config.js"></script>
   <script src="admin.js"></script>
 </body>
