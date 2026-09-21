@@ -15,10 +15,10 @@
       <div class="auth-mark">QA</div>
       <p class="eyebrow">RESTRICTED AREA</p>
       <h1>ADMIN ACCESS</h1>
-      <p>Sign in with your Supabase administrator account.</p>
+      <p>سجّل دخولك بحساب الأدمن من Supabase علشان تدخل لوحة التحكم.</p>
       <label>Email<input id="loginEmail" type="email" autocomplete="username" required></label>
       <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-      <button class="primary" id="loginBtn" type="submit" data-i18n="LOGIN">LOGIN</button>
+      <button class="primary" id="loginBtn" type="submit" data-i18n="LOGIN">دخول</button>
       <div id="loginMessage" class="form-message"></div>
       <a class="back-link" href="index.html">← RETURN TO ARCHIVE</a>
     </form>
@@ -28,27 +28,77 @@
     <aside class="sidebar">
       <div class="side-brand"><span>QA</span><div><strong>QUESTION</strong><small>ARCHIVE / ADMIN</small></div></div>
       <nav>
-        <button class="side-link active" data-section="dashboard" data-i18n="DASHBOARD">DASHBOARD</button>
-        <button class="side-link" data-section="questions" data-i18n="QUESTIONS">QUESTIONS</button>
-        <button class="side-link" data-section="chapters" data-i18n="CHAPTERS">CHAPTERS</button>
-        <button class="side-link" data-section="categories" data-i18n="CATEGORIES">CATEGORIES</button>
-        <button class="side-link" data-section="settings" data-i18n="SETTINGS">SETTINGS</button>
-        <button class="side-link" data-section="account" data-i18n="ACCOUNT">ACCOUNT</button>
+        <button class="side-link active" data-section="dashboard" data-i18n="DASHBOARD">لوحة التحكم</button>
+        <button class="side-link" data-section="questions" data-i18n="QUESTIONS">الأسئلة</button>
+        <button class="side-link" data-section="chapters" data-i18n="CHAPTERS">الفصول</button>
+        <button class="side-link" data-section="categories" data-i18n="التصنيفات">التصنيفات</button>
+        <button class="side-link" data-section="settings" data-i18n="SETTINGS">الإعدادات</button>
+        <button class="side-link" data-section="account" data-i18n="ACCOUNT">الحساب</button>
       </nav>
-      <button id="logoutBtn" class="logout" data-i18n="LOGOUT">LOGOUT</button>
+      <button id="logoutBtn" class="logout" data-i18n="LOGOUT">تسجيل خروج</button>
     </aside>
 
     <main class="admin-main">
-      <header class="admin-top"><button id="sidebarToggle" class="mobile-menu">☰</button><div><p class="eyebrow">CONTROL ROOM</p><h2 id="sectionTitle">DASHBOARD</h2></div><span id="adminIdentity"></span></header>
+      <header class="admin-top"><button id="sidebarToggle" class="mobile-menu">☰</button><div><p class="eyebrow">CONTROL ROOM</p><h2 id="sectionTitle">لوحة التحكم</h2></div><span id="adminIdentity"></span></header>
 
       <section id="section-dashboard" class="panel-section active">
         <div class="metrics">
-          <article><small>TOTAL QUESTIONS</small><strong id="mQuestions">0</strong></article>
-          <article><small>PUBLISHED</small><strong id="mPublished">0</strong></article>
-          <article><small>CHAPTERS</small><strong id="mChapters">0</strong></article>
-          <article><small>CATEGORIES</small><strong id="mCategories">0</strong></article>
+          <article><small>إجمالي الأسئلة</small><strong id="mQuestions">0</strong></article>
+          <article><small>المنشور</small><strong id="mPublished">0</strong></article>
+          <article><small>الفصول</small><strong id="mChapters">0</strong></article>
+          <article><small>التصنيفات</small><strong id="mCategories">0</strong></article>
         </div>
-        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">RECENT FILES</p><h3>RECENT QUESTIONS</h3></div></div><div id="recentQuestions"></div></div>
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">آخر الإضافات</p><h3>أحدث الأسئلة</h3></div></div><div id="recentQuestions"></div></div>
+      </section>
+
+      <section id="section-questions" class="panel-section">
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">إدارة الأسئلة</p><h3>الأسئلة</h3></div><button class="primary" id="addQuestionBtn">+ إضافة سؤال</button></div>
+          <div class="table-tools"><input id="adminQuestionSearch" type="search" placeholder="ابحث في الأسئلة..."></div>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>TITLE</th><th>CHAPTER</th><th>CATEGORY</th><th>المنشور</th><th>CREATED</th><th>ACTIONS</th></tr></thead><tbody id="questionsTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="section-chapters" class="panel-section">
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">إدارة الفصول</p><h3>الفصول</h3></div><button class="primary" id="addChapterBtn">+ إضافة فصل</button></div><div id="chaptersAdmin"></div></div>
+      </section>
+
+      <section id="section-categories" class="panel-section">
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">التصنيفات</p><h3>التصنيفات</h3></div><button class="primary" id="addCategoryBtn">+ إضافة تصنيف</button></div><div id="categoriesAdmin"></div></div>
+      </section>
+
+      <section id="section-settings" class="panel-section">
+        <form id="settingsForm" class="panel-card settings-form">
+          <div class="panel-head"><div><p class="eyebrow">إعدادات الموقع</p><h3>الإعدادات</h3></div></div>
+          <div class="form-grid">
+            <label>اسم الموقع<input id="sSiteName"></label>
+            <label>بريد التواصل<input id="sEmail" type="email"></label>
+            <label class="full">وصف الموقع<textarea id="sDescription" rows="3"></textarea></label>
+            <label>رقم واتساب<input id="sWhatsApp" placeholder="2010..."></label>
+            <label>رسالة واتساب الافتراضية<textarea id="sWhatsAppMessage" rows="3"></textarea></label>
+            <label class="full">نص التذييل<input id="sFooter"></label>
+            <label>اسم المطوّر<input id="sDeveloperName"></label>
+            <label>رابط تواصل المطوّر<input id="sDeveloperContact" placeholder="https://..."></label>
+            <label class="full">نص من المطوّر<textarea id="sDeveloperText" rows="4"></textarea></label>
+          </div>
+          <button class="primary" type="submit">حفظ الإعدادات</button><div id="settingsMessage" class="form-message"></div>
+        </form>
+      </section>
+
+      <section id="section-account" class="panel-section">
+        <div class="panel-card account-card"><p class="eyebrow">جلسة الأدمن</p><h3 id="accountEmail">—</h3><p id="accountRole">الدور: —</p><button class="danger-btn" id="accountLogout" data-i18n="LOGOUT">تسجيل خروج</button></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal" class="modal hidden"><div class="modal-backdrop" data-close></div><div class="modal-card"><button class="modal-close" data-close>×</button><div id="modalContent"></div></div></div>
+  <div id="toastRegion" class="toast-region"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="i18n.js"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
       </section>
 
       <section id="section-questions" class="panel-section">
