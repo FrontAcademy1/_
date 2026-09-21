@@ -285,3 +285,11 @@ function toast(message){const r=document.getElementById("toastRegion"),e=documen
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 function attr(v){return esc(v).replace(/\n/g,"&#10;");}
 function formatDate(v){try{return new Date(v).toLocaleDateString("en-GB")}catch{return "—";}}
+
+window.addEventListener("qa-language-change", () => {
+  const title = document.getElementById("sectionTitle");
+  const active = document.querySelector(".side-link.active");
+  if (title && active) title.textContent = QA_I18N.t(active.textContent.trim());
+  const search = document.getElementById("adminQuestionSearch");
+  if (search) search.placeholder = QA_I18N.get() === "ar" ? "ابحث في الأسئلة..." : "Search questions...";
+});
