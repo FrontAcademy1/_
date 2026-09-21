@@ -26,10 +26,10 @@
       </a>
       <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
       <nav class="main-nav" id="mainNav">
-        <a href="#home">HOME</a>
-        <a href="#chapters">CHAPTERS</a>
-        <a href="#questions">QUESTIONS</a>
-        <a href="#contact">CONTACT</a>
+        <a href="#home" data-i18n="HOME">HOME</a>
+        <a href="#chapters" data-i18n="CHAPTERS">CHAPTERS</a>
+        <a href="#questions" data-i18n="QUESTIONS">QUESTIONS</a>
+        <a href="#contact" data-i18n="CONTACT">CONTACT</a>
       </nav>
     </div>
   </header>
@@ -123,13 +123,14 @@
   <footer class="site-footer">
     <div class="container footer-grid">
       <div><strong>QUESTION ARCHIVE</strong><span id="footerText">© 2026 Question Archive</span></div>
-      <a href="#contact">CONTACT</a>
+      <a href="#contact" data-i18n="CONTACT">CONTACT</a>
     </div>
   </footer>
 
   <div id="toastRegion" class="toast-region" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="i18n.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
