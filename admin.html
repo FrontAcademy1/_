@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADMIN — QUESTION ARCHIVE</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div class="admin-bg" aria-hidden="true"><div id="adminBubbles"></div></div>
+  <div id="loginView" class="auth-screen">
+    <form id="loginForm" class="auth-card">
+      <div class="auth-mark">QA</div>
+      <p class="eyebrow">RESTRICTED AREA</p>
+      <h1>ADMIN ACCESS</h1>
+      <p>Sign in with your Supabase administrator account.</p>
+      <label>Email<input id="loginEmail" type="email" autocomplete="username" required></label>
+      <label>Password<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+      <button class="primary" id="loginBtn" type="submit">LOGIN</button>
+      <div id="loginMessage" class="form-message"></div>
+      <a class="back-link" href="index.html">← RETURN TO ARCHIVE</a>
+    </form>
+  </div>
+
+  <div id="adminApp" class="admin-app hidden">
+    <aside class="sidebar">
+      <div class="side-brand"><span>QA</span><div><strong>QUESTION</strong><small>ARCHIVE / ADMIN</small></div></div>
+      <nav>
+        <button class="side-link active" data-section="dashboard">DASHBOARD</button>
+        <button class="side-link" data-section="questions">QUESTIONS</button>
+        <button class="side-link" data-section="chapters">CHAPTERS</button>
+        <button class="side-link" data-section="categories">CATEGORIES</button>
+        <button class="side-link" data-section="settings">SETTINGS</button>
+        <button class="side-link" data-section="account">ACCOUNT</button>
+      </nav>
+      <button id="logoutBtn" class="logout">LOGOUT</button>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-top"><button id="sidebarToggle" class="mobile-menu">☰</button><div><p class="eyebrow">CONTROL ROOM</p><h2 id="sectionTitle">DASHBOARD</h2></div><span id="adminIdentity"></span></header>
+
+      <section id="section-dashboard" class="panel-section active">
+        <div class="metrics">
+          <article><small>TOTAL QUESTIONS</small><strong id="mQuestions">0</strong></article>
+          <article><small>PUBLISHED</small><strong id="mPublished">0</strong></article>
+          <article><small>CHAPTERS</small><strong id="mChapters">0</strong></article>
+          <article><small>CATEGORIES</small><strong id="mCategories">0</strong></article>
+        </div>
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">RECENT FILES</p><h3>RECENT QUESTIONS</h3></div></div><div id="recentQuestions"></div></div>
+      </section>
+
+      <section id="section-questions" class="panel-section">
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">FILE MANAGEMENT</p><h3>QUESTIONS</h3></div><button class="primary" id="addQuestionBtn">+ ADD QUESTION</button></div>
+          <div class="table-tools"><input id="adminQuestionSearch" type="search" placeholder="Search questions..."></div>
+          <div class="table-wrap"><table><thead><tr><th>ID</th><th>TITLE</th><th>CHAPTER</th><th>CATEGORY</th><th>PUBLISHED</th><th>CREATED</th><th>ACTIONS</th></tr></thead><tbody id="questionsTable"></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="section-chapters" class="panel-section">
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">INDEX MANAGEMENT</p><h3>CHAPTERS</h3></div><button class="primary" id="addChapterBtn">+ ADD CHAPTER</button></div><div id="chaptersAdmin"></div></div>
+      </section>
+
+      <section id="section-categories" class="panel-section">
+        <div class="panel-card"><div class="panel-head"><div><p class="eyebrow">TAXONOMY</p><h3>CATEGORIES</h3></div><button class="primary" id="addCategoryBtn">+ ADD CATEGORY</button></div><div id="categoriesAdmin"></div></div>
+      </section>
+
+      <section id="section-settings" class="panel-section">
+        <form id="settingsForm" class="panel-card settings-form">
+          <div class="panel-head"><div><p class="eyebrow">PUBLIC CONFIGURATION</p><h3>SETTINGS</h3></div></div>
+          <div class="form-grid">
+            <label>Site Name<input id="sSiteName"></label>
+            <label>Contact Email<input id="sEmail" type="email"></label>
+            <label class="full">Site Description<textarea id="sDescription" rows="3"></textarea></label>
+            <label>WhatsApp Number<input id="sWhatsApp" placeholder="2010..."></label>
+            <label>WhatsApp Default Message<textarea id="sWhatsAppMessage" rows="3"></textarea></label>
+            <label class="full">Footer Text<input id="sFooter"></label>
+          </div>
+          <button class="primary" type="submit">SAVE SETTINGS</button><div id="settingsMessage" class="form-message"></div>
+        </form>
+      </section>
+
+      <section id="section-account" class="panel-section">
+        <div class="panel-card account-card"><p class="eyebrow">AUTHENTICATED SESSION</p><h3 id="accountEmail">—</h3><p id="accountRole">Role: —</p><button class="danger-btn" id="accountLogout">LOGOUT</button></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modal" class="modal hidden"><div class="modal-backdrop" data-close></div><div class="modal-card"><button class="modal-close" data-close>×</button><div id="modalContent"></div></div></div>
+  <div id="toastRegion" class="toast-region"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
