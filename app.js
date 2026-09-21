@@ -227,3 +227,13 @@ function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" }[ch]));
 }
 function escapeAttr(value) { return escapeHtml(value); }
+
+/* Re-render dynamic public content after changing language. */
+window.addEventListener("qa-language-change", () => {
+  const search = document.querySelector("#searchInput");
+  if (search) search.placeholder = QA_I18N.get() === "ar" ? "ابحث في الأسئلة..." : "Search questions...";
+  if (typeof renderFilters === "function") renderFilters();
+  if (typeof renderQuestions === "function") renderQuestions();
+  if (typeof renderChapters === "function") renderChapters();
+  if (typeof renderContact === "function") renderContact();
+});
