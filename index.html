@@ -59,6 +59,183 @@
  </div>
 </section>
 
+  <!-- =====================================================
+     AI DEVELOPER
+===================================================== -->
+
+<section class="ai-section" id="ai">
+
+  <div class="ai-section-header">
+
+    <span class="ai-eyebrow">
+      AI DEVELOPER
+    </span>
+
+    <h2>
+      مساعد البرمجة
+    </h2>
+
+    <p>
+      اسأل عن البرمجة، الأكواد، الأخطاء، HTML، CSS،
+      JavaScript، Python، SQL، Supabase و n8n.
+    </p>
+
+  </div>
+
+
+  <div class="ai-chat-box">
+
+    <!-- HEADER -->
+
+    <div class="ai-chat-header">
+
+      <div class="ai-brand">
+
+        <div class="ai-status-dot"></div>
+
+        <div>
+          <strong>
+            AI DEVELOPER
+          </strong>
+
+          <span>
+            مساعد البرمجة
+          </span>
+        </div>
+
+      </div>
+
+      <button
+        type="button"
+        id="aiNewChat"
+        class="ai-new-chat"
+      >
+        محادثة جديدة
+      </button>
+
+    </div>
+
+
+    <!-- MESSAGES -->
+
+    <div
+      id="homeAiMessages"
+      class="ai-messages"
+    >
+
+      <div class="ai-message ai-message-bot">
+
+        <div class="ai-message-label">
+          AI DEVELOPER
+        </div>
+
+        <div class="ai-message-text">
+
+          أهلاً بيك.
+
+          <br><br>
+
+          أنا مساعد البرمجة الخاص بالمنصة.
+          ابعتلي أي سؤال متعلق بالبرمجة أو الكود
+          وأنا هساعدك فيه.
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- TYPING -->
+
+    <div
+      id="homeAiTyping"
+      class="ai-typing hidden"
+    >
+
+      <span></span>
+      <span></span>
+      <span></span>
+
+      <label>
+        AI يكتب...
+      </label>
+
+    </div>
+
+
+    <!-- QUICK QUESTIONS -->
+
+    <div class="ai-quick-actions">
+
+      <button
+        type="button"
+        data-ai-home-prompt="اشرح لي HTML بطريقة بسيطة"
+      >
+        شرح HTML
+      </button>
+
+      <button
+        type="button"
+        data-ai-home-prompt="اشرح لي CSS للمبتدئين"
+      >
+        CSS
+      </button>
+
+      <button
+        type="button"
+        data-ai-home-prompt="اشرح لي JavaScript"
+      >
+        JavaScript
+      </button>
+
+      <button
+        type="button"
+        data-ai-home-prompt="ساعدني في حل مشكلة في الكود"
+      >
+        تصحيح كود
+      </button>
+
+    </div>
+
+
+    <!-- INPUT -->
+
+    <div class="ai-composer">
+
+      <textarea
+        id="homeAiInput"
+        rows="1"
+        placeholder="اكتب سؤالك البرمجي هنا..."
+        autocomplete="off"
+      ></textarea>
+
+      <button
+        type="button"
+        id="homeAiSend"
+        class="ai-send-button"
+      >
+        إرسال
+      </button>
+
+      <button
+        type="button"
+        id="homeAiStop"
+        class="ai-stop-button hidden"
+      >
+        إيقاف
+      </button>
+
+    </div>
+
+    <div class="ai-footer-note">
+      AI Developer — Powered by n8n
+    </div>
+
+  </div>
+
+</section>
+
 <section class="section chapters-section" id="chapters">
  <div class="container"><div class="section-heading"><div><p class="eyebrow">INDEX OF FILES</p><h2 data-i18n="CHAPTERS">الفصول</h2></div><span class="section-number">02 / 04</span></div><div id="chaptersGrid" class="chapters-grid"></div></div>
 </section>
