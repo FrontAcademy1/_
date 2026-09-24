@@ -1,213 +1,983 @@
 /* =========================================================
-   QUESTION ARCHIVE — AI DEVELOPER
+   QUESTION ARCHIVE — AI DEVELOPER CHAT
+   n8n Production Webhook
    ========================================================= */
 
 (() => {
-
   "use strict";
 
+  // =========================================================
+  // n8n PRODUCTION WEBHOOK
+  // =========================================================
 
-  /* ---------------------------------------------------------
-     CONFIG
-  --------------------------------------------------------- */
-
-  const AI_FUNCTION_NAME = "ai-chat";
-
-
-  /* ---------------------------------------------------------
-     DOM
-  --------------------------------------------------------- */
-
-  const chatMessages =
-    document.getElementById("chatMessages");
-
-  const messageInput =
-    document.getElementById("messageInput");
-
-  const sendBtn =
-    document.getElementById("sendBtn");
-
-  const stopBtn =
-    document.getElementById("stopBtn");
-
-  const newChatBtn =
-    document.getElementById("newChatBtn");
-
-  const typingIndicator =
-    document.getElementById("typingIndicator");
-
-  const languageSelect =
-    document.getElementById("languageSelect");
-
-  const selectedLanguage =
-    document.getElementById("selectedLanguage");
-
-  const connectionStatus =
-    document.getElementById("connectionStatus");
+  const N8N_WEBHOOK_URL =
+    "https://jane-loy.app.n8n.cloud/webhook/5e5a2910-d731-49b4-9217-c70938ca749c";
 
 
-  /* ---------------------------------------------------------
-     STATE
-  --------------------------------------------------------- */
+  // =========================================================
+  // SUPABASE CONFIG
+  // =========================================================
 
-  let conversation = [];
+  const SUPABASE_URL =
+    window.SUPABASE_URL ||
+    window.QUESTION_ARCHIVE_CONFIG?.SUPABASE_URL ||
+    "";
 
-  let controller = null;
-
-  let isSending = false;
-
-
-  /* ---------------------------------------------------------
-     SUPABASE
-  --------------------------------------------------------- */
+  const SUPABASE_ANON_KEY =
+    window.SUPABASE_ANON_KEY ||
+    window.QUESTION_ARCHIVE_CONFIG?.SUPABASE_ANON_KEY ||
+    "";
 
   if (!window.supabase) {
-    showConnection(
-      "Supabase غير محمل",
-      false
-    );
-
+    console.error("Supabase library is not loaded.");
     return;
   }
 
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
-  if (
-    !window.SUPABASE_URL ||
-    !window.SUPABASE_ANON_KEY
-  ) {
 
-    showConnection(
-      "إعدادات Supabase ناقصة",
-      false
-    );
+  // =========================================================
+  // DOM
+  // =========================================================
 
-    return;
+  const $ = (selector, parent = document) =>
+    parent.querySelector(selector);
+
+  const chatMessages = $("#chatMessages");
+  const messageInput = $("#messageInput");
+  const sendButton = $("#sendButton");
+  const stopButton = $("#stopButton");
+  const newChatButton = $("#newChatButton");
+  const connectionStatus = $("#connectionStatus");
+  const typingIndicator = $("#typingIndicator");
+  const languageSelect = $("#languageSelect");
+  const modeSelect = $("#modeSelect");
+
+  let abortController = null;
+  let isSending = false;
+
+  let conversationHistory = [];
+
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+
+  function escapeHTML(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
 
-  const supabaseClient =
-    window.supabase.createClient(
-      window.SUPABASE_URL,
-      window.SUPABASE_ANON_KEY
+  function setConnection(text, state = "") {
+    if (!connectionStatus) return;
+
+    connectionStatus.textContent = text;
+    connectionStatus.dataset.state = state;
+  }
+
+
+  function setTyping(show) {
+    if (!typingIndicator) return;
+
+    typingIndicator.classList.toggle("hidden", !show);
+  }
+
+
+  function setSendingState(sending) {
+    isSending = sending;
+
+    if (sendButton) {
+      sendButton.disabled = sending;
+      sendButton.classList.toggle("hidden", sending);
+    }
+
+    if (stopButton) {
+      stopButton.disabled = !sending;
+      stopButton.classList.toggle("hidden", !sending);
+    }
+
+    if (messageInput) {
+      messageInput.disabled = sending;
+    }
+  }
+
+
+  function scrollToBottom() {
+    if (!chatMessages) return;
+
+    requestAnimationFrame(() => {
+      chatMessages.scrollTop =
+        chatMessages.scrollHeight;
+    });
+  }
+
+
+  // =========================================================
+  // FORMAT AI RESPONSE
+  // =========================================================
+
+  function formatAssistantText(text) {
+    let source = String(text ?? "").trim();
+
+    if (!source) {
+      return "<p>لم يصل رد من الـ AI.</p>";
+    }
+
+    const blocks = [];
+    const token = "__QA_CODE_BLOCK_";
+
+    source = source.replace(
+      /```([\w#+.-]*)\s*\n?([\s\S]*?)```/g,
+      (_, language, code) => {
+        const index = blocks.length;
+
+        blocks.push({
+          language: language || "code",
+          code: code.replace(/\n$/, "")
+        });
+
+        return `\n${token}${index}__\n`;
+      }
     );
 
+    let html = escapeHTML(source);
 
-  /* ---------------------------------------------------------
-     AUTH
-  --------------------------------------------------------- */
+    html = html.replace(
+      /`([^`\n]+)`/g,
+      "<code>$1</code>"
+    );
 
-  init();
+    html = html.replace(
+      /\*\*(.+?)\*\*/g,
+      "<strong>$1</strong>"
+    );
+
+    html = html.replace(
+      /^### (.+)$/gm,
+      "<h4>$1</h4>"
+    );
+
+    html = html.replace(
+      /^## (.+)$/gm,
+      "<h3>$1</h3>"
+    );
+
+    html = html.replace(
+      /^# (.+)$/gm,
+      "<h2>$1</h2>"
+    );
+
+    html = html.replace(
+      /^\s*[-*]\s+(.+)$/gm,
+      "<li>$1</li>"
+    );
+
+    html = html.replace(
+      /(<li>[\s\S]*?<\/li>)/g,
+      "<ul>$1</ul>"
+    );
+
+    html = html.replace(/\n/g, "<br>");
+
+    blocks.forEach((block, index) => {
+      const safeCode = escapeHTML(block.code);
+
+      const codeHTML = `
+        <div class="qa-code-block">
+
+          <div class="qa-code-header">
+            <span>${escapeHTML(block.language)}</span>
+
+            <button
+              type="button"
+              class="qa-copy-code"
+              data-code="${escapeHTML(block.code)}"
+            >
+              نسخ الكود
+            </button>
+          </div>
+
+          <pre><code>${safeCode}</code></pre>
+
+        </div>
+      `;
+
+      html = html.replace(
+        new RegExp(
+          token + index + "__",
+          "g"
+        ),
+        codeHTML
+      );
+    });
+
+    return html;
+  }
 
 
-  async function init() {
+  // =========================================================
+  // ADD USER MESSAGE
+  // =========================================================
+
+  function addUserMessage(text) {
+    if (!chatMessages) return;
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className =
+      "chat-message user-message";
+
+    wrapper.innerHTML = `
+      <div class="message-content">
+
+        <div class="message-label">
+          أنت
+        </div>
+
+        <div class="message-body">
+          ${escapeHTML(text)}
+        </div>
+
+      </div>
+    `;
+
+    chatMessages.appendChild(wrapper);
+
+    scrollToBottom();
+  }
+
+
+  // =========================================================
+  // ADD AI MESSAGE
+  // =========================================================
+
+  function addAssistantMessage(text) {
+    if (!chatMessages) return null;
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className =
+      "chat-message assistant-message";
+
+    wrapper.innerHTML = `
+      <div class="message-content">
+
+        <div class="message-label">
+          AI DEVELOPER
+        </div>
+
+        <div class="message-body assistant-body">
+          ${formatAssistantText(text)}
+        </div>
+
+      </div>
+    `;
+
+    chatMessages.appendChild(wrapper);
+
+    scrollToBottom();
+
+    return wrapper;
+  }
+
+
+  // =========================================================
+  // ERROR MESSAGE
+  // =========================================================
+
+  function addErrorMessage(text) {
+    if (!chatMessages) return;
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.className =
+      "chat-message error-message";
+
+    wrapper.innerHTML = `
+      <div class="message-content">
+
+        <div class="message-label">
+          خطأ
+        </div>
+
+        <div class="message-body">
+          ${escapeHTML(text)}
+        </div>
+
+      </div>
+    `;
+
+    chatMessages.appendChild(wrapper);
+
+    scrollToBottom();
+  }
+
+
+  // =========================================================
+  // ADMIN SESSION
+  // =========================================================
+
+  async function getAdminSession() {
+
+    const {
+      data: { session },
+      error
+    } = await supabaseClient.auth.getSession();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!session) {
+      return null;
+    }
+
+    const {
+      data: profile,
+      error: profileError
+    } = await supabaseClient
+      .from("profiles")
+      .select(
+        "id, role, display_name"
+      )
+      .eq("id", session.user.id)
+      .maybeSingle();
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    if (
+      !profile ||
+      profile.role !== "admin"
+    ) {
+      return null;
+    }
+
+    return {
+      session,
+      profile
+    };
+  }
+
+
+  // =========================================================
+  // ADMIN ACCESS
+  // =========================================================
+
+  async function checkAdminAccess() {
 
     try {
 
-      const {
-        data: {
-          session
-        }
-      } =
-        await supabaseClient.auth.getSession();
-
-
-      if (!session) {
-
-        redirectToAdmin();
-
-        return;
-      }
-
-
-      const {
-        data: profile,
-        error
-      } =
-        await supabaseClient
-          .from("profiles")
-          .select("role, display_name")
-          .eq("id", session.user.id)
-          .maybeSingle();
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      if (
-        !profile ||
-        profile.role !== "admin"
-      ) {
-
-        await supabaseClient.auth.signOut();
-
-        redirectToAdmin();
-
-        return;
-      }
-
-
-      showConnection(
-        "متصل",
-        true
+      setConnection(
+        "جاري التحقق...",
+        "checking"
       );
 
+      const admin =
+        await getAdminSession();
 
-      setupEvents();
+      if (!admin) {
+
+        setConnection(
+          "غير مصرح",
+          "error"
+        );
+
+        setTimeout(() => {
+          window.location.href =
+            "admin.html";
+        }, 800);
+
+        return false;
+      }
+
+      setConnection(
+        "متصل",
+        "online"
+      );
+
+      return true;
 
     } catch (error) {
 
       console.error(
-        "AI initialization error:",
+        "Admin check error:",
         error
       );
 
-      showConnection(
-        "فشل التحقق",
-        false
+      setConnection(
+        "خطأ في الاتصال",
+        "error"
       );
 
+      addErrorMessage(
+        "حصلت مشكلة أثناء التحقق من حساب الأدمن. راجع Supabase و config.js."
+      );
+
+      return false;
+    }
+  }
+
+
+  // =========================================================
+  // LANGUAGE
+  // =========================================================
+
+  function getSelectedLanguage() {
+
+    if (!languageSelect) {
+      return "ar";
     }
 
+    return (
+      languageSelect.value ||
+      "ar"
+    );
   }
 
 
-  function redirectToAdmin() {
+  // =========================================================
+  // MODE
+  // =========================================================
 
-    window.location.href =
-      "admin.html";
+  function getSelectedMode() {
 
+    if (!modeSelect) {
+      return "developer";
+    }
+
+    return (
+      modeSelect.value ||
+      "developer"
+    );
   }
 
 
-  /* ---------------------------------------------------------
-     EVENTS
-  --------------------------------------------------------- */
+  // =========================================================
+  // BUILD n8n PAYLOAD
+  // =========================================================
 
-  function setupEvents() {
+  function buildPayload(message) {
 
-    sendBtn.addEventListener(
-      "click",
-      sendMessage
+    return {
+
+      message,
+
+      history:
+        conversationHistory.slice(-20),
+
+      language:
+        getSelectedLanguage(),
+
+      mode:
+        getSelectedMode(),
+
+      source:
+        "question-archive",
+
+      client: {
+
+        page:
+          window.location.href,
+
+        timestamp:
+          new Date().toISOString()
+      }
+    };
+  }
+
+
+  // =========================================================
+  // SEND TO n8n
+  // =========================================================
+
+  async function sendToN8N(message) {
+
+    if (!N8N_WEBHOOK_URL) {
+      throw new Error(
+        "n8n Webhook URL is missing."
+      );
+    }
+
+    abortController =
+      new AbortController();
+
+    const response =
+      await fetch(
+        N8N_WEBHOOK_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            "Accept":
+              "application/json"
+          },
+
+          body:
+            JSON.stringify(
+              buildPayload(message)
+            ),
+
+          signal:
+            abortController.signal
+        }
+      );
+
+    if (!response.ok) {
+
+      let details = "";
+
+      try {
+        details =
+          await response.text();
+      } catch (_) {}
+
+      throw new Error(
+        `n8n Error ${response.status}${
+          details
+            ? `: ${details.slice(0, 500)}`
+            : ""
+        }`
+      );
+    }
+
+    const contentType =
+      response.headers.get(
+        "content-type"
+      ) || "";
+
+    if (
+      contentType.includes(
+        "application/json"
+      )
+    ) {
+
+      return await response.json();
+    }
+
+    const text =
+      await response.text();
+
+    return {
+      reply: text
+    };
+  }
+
+
+  // =========================================================
+  // EXTRACT RESPONSE
+  // =========================================================
+
+  function extractReply(data) {
+
+    if (data == null) {
+      return "";
+    }
+
+    if (
+      typeof data === "string"
+    ) {
+      return data;
+    }
+
+    const keys = [
+      "reply",
+      "output",
+      "text",
+      "response",
+      "answer",
+      "message"
+    ];
+
+    for (const key of keys) {
+
+      if (
+        typeof data[key] ===
+          "string" &&
+        data[key].trim()
+      ) {
+
+        return data[key].trim();
+      }
+    }
+
+    if (data.data) {
+
+      const nested =
+        extractReply(data.data);
+
+      if (nested) {
+        return nested;
+      }
+    }
+
+    if (
+      Array.isArray(data) &&
+      data.length
+    ) {
+
+      for (const item of data) {
+
+        const nested =
+          extractReply(item);
+
+        if (nested) {
+          return nested;
+        }
+      }
+    }
+
+    try {
+
+      return JSON.stringify(
+        data,
+        null,
+        2
+      );
+
+    } catch (_) {
+
+      return String(data);
+    }
+  }
+
+
+  // =========================================================
+  // SEND MESSAGE
+  // =========================================================
+
+  async function handleSend() {
+
+    if (isSending) return;
+
+    const message =
+      messageInput?.value?.trim() ||
+      "";
+
+    if (!message) return;
+
+    addUserMessage(message);
+
+    if (messageInput) {
+
+      messageInput.value = "";
+
+      messageInput.style.height =
+        "";
+    }
+
+    conversationHistory.push({
+      role: "user",
+      content: message
+    });
+
+    setSendingState(true);
+
+    setTyping(true);
+
+    try {
+
+      const data =
+        await sendToN8N(message);
+
+      const reply =
+        extractReply(data);
+
+      if (!reply) {
+
+        throw new Error(
+          "n8n returned an empty AI response."
+        );
+      }
+
+      addAssistantMessage(
+        reply
+      );
+
+      conversationHistory.push({
+        role: "assistant",
+        content: reply
+      });
+
+    } catch (error) {
+
+      if (
+        error?.name ===
+        "AbortError"
+      ) {
+
+        addAssistantMessage(
+          "تم إيقاف التوليد."
+        );
+
+      } else {
+
+        console.error(
+          "AI chat error:",
+          error
+        );
+
+        addErrorMessage(
+          `تعذر الحصول على رد من AI.
+
+${error.message || error}`
+        );
+      }
+
+    } finally {
+
+      abortController = null;
+
+      setTyping(false);
+
+      setSendingState(false);
+
+      if (messageInput) {
+        messageInput.focus();
+      }
+    }
+  }
+
+
+  // =========================================================
+  // STOP
+  // =========================================================
+
+  function stopGeneration() {
+
+    if (abortController) {
+      abortController.abort();
+    }
+  }
+
+
+  // =========================================================
+  // NEW CHAT
+  // =========================================================
+
+  function startNewChat() {
+
+    conversationHistory = [];
+
+    if (chatMessages) {
+
+      chatMessages.innerHTML = `
+
+        <div class="chat-message assistant-message">
+
+          <div class="message-content">
+
+            <div class="message-label">
+              AI DEVELOPER
+            </div>
+
+            <div class="message-body">
+
+              <h2>
+                أهلاً بيك في AI Developer
+              </h2>
+
+              <p>
+                أنا مساعد البرمجة الخاص بالمشروع.
+                ابعتلي الكود أو المشكلة، وهساعدك في
+                HTML و CSS و JavaScript و TypeScript
+                و Python و SQL و Supabase و APIs و n8n.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+    }
+
+    if (messageInput) {
+
+      messageInput.value = "";
+
+      messageInput.focus();
+    }
+
+    setConnection(
+      "متصل",
+      "online"
     );
 
-
-    stopBtn.addEventListener(
-      "click",
-      stopGeneration
-    );
+    scrollToBottom();
+  }
 
 
-    newChatBtn.addEventListener(
-      "click",
-      newChat
+  // =========================================================
+  // COPY CODE
+  // =========================================================
+
+  async function copyCode(code) {
+
+    try {
+
+      await navigator.clipboard.writeText(
+        code
+      );
+
+      return true;
+
+    } catch (error) {
+
+      console.error(
+        "Copy error:",
+        error
+      );
+
+      return false;
+    }
+  }
+
+
+  document.addEventListener(
+    "click",
+    async (event) => {
+
+      const button =
+        event.target.closest(
+          ".qa-copy-code"
+        );
+
+      if (!button) return;
+
+      const code =
+        button.getAttribute(
+          "data-code"
+        ) || "";
+
+      const success =
+        await copyCode(
+          code
+            .replace(
+              /&quot;/g,
+              '"'
+            )
+            .replace(
+              /&#039;/g,
+              "'"
+            )
+            .replace(
+              /&lt;/g,
+              "<"
+            )
+            .replace(
+              /&gt;/g,
+              ">"
+            )
+            .replace(
+              /&amp;/g,
+              "&"
+            )
+        );
+
+      if (success) {
+
+        const original =
+          button.textContent;
+
+        button.textContent =
+          "تم النسخ";
+
+        setTimeout(() => {
+
+          button.textContent =
+            original;
+
+        }, 1200);
+      }
+    }
+  );
+
+
+  // =========================================================
+  // QUICK PROMPTS
+  // =========================================================
+
+  function fillPrompt(text) {
+
+    if (!messageInput) return;
+
+    messageInput.value = text;
+
+    messageInput.focus();
+
+    messageInput.style.height =
+      "auto";
+
+    messageInput.style.height =
+      `${messageInput.scrollHeight}px`;
+  }
+
+
+  document.addEventListener(
+    "click",
+    (event) => {
+
+      const button =
+        event.target.closest(
+          "[data-ai-prompt], [data-prompt]"
+        );
+
+      if (!button) return;
+
+      const prompt =
+        button.dataset.aiPrompt ||
+        button.dataset.prompt ||
+        "";
+
+      if (prompt) {
+        fillPrompt(prompt);
+      }
+    }
+  );
+
+
+  // =========================================================
+  // TEXTAREA
+  // =========================================================
+
+  if (messageInput) {
+
+    messageInput.addEventListener(
+      "input",
+      () => {
+
+        messageInput.style.height =
+          "auto";
+
+        messageInput.style.height =
+          `${Math.min(
+            messageInput.scrollHeight,
+            220
+          )}px`;
+      }
     );
 
 
     messageInput.addEventListener(
       "keydown",
-      event => {
+      (event) => {
 
         if (
           event.key === "Enter" &&
@@ -216,839 +986,127 @@
 
           event.preventDefault();
 
-          sendMessage();
-
+          handleSend();
         }
-
       }
     );
+  }
 
 
-    languageSelect.addEventListener(
-      "change",
-      updateLanguage
-    );
+  // =========================================================
+  // BUTTONS
+  // =========================================================
 
+  if (sendButton) {
 
-    document
-      .querySelectorAll(".quick-action")
-      .forEach(button => {
-
-        button.addEventListener(
-          "click",
-          () => {
-
-            messageInput.value =
-              button.dataset.prompt || "";
-
-            messageInput.focus();
-
-          }
-        );
-
-      });
-
-
-    chatMessages.addEventListener(
+    sendButton.addEventListener(
       "click",
-      handleChatClick
+      handleSend
     );
-
   }
 
 
-  /* ---------------------------------------------------------
-     LANGUAGE
-  --------------------------------------------------------- */
+  if (stopButton) {
 
-  function updateLanguage() {
-
-    const value =
-      languageSelect.value;
-
-    const option =
-      languageSelect.options[
-        languageSelect.selectedIndex
-      ];
-
-
-    selectedLanguage.textContent =
-      option
-        ? option.textContent
-        : value;
-
+    stopButton.addEventListener(
+      "click",
+      stopGeneration
+    );
   }
 
 
-  /* ---------------------------------------------------------
-     SEND
-  --------------------------------------------------------- */
+  if (newChatButton) {
 
-  async function sendMessage() {
-
-    if (isSending) {
-      return;
-    }
-
-
-    const message =
-      messageInput.value.trim();
-
-
-    if (!message) {
-      return;
-    }
-
-
-    isSending = true;
-
-    setLoading(true);
-
-
-    appendMessage(
-      "user",
-      message
+    newChatButton.addEventListener(
+      "click",
+      startNewChat
     );
+  }
 
 
-    messageInput.value = "";
+  // =========================================================
+  // SUPABASE AUTH
+  // =========================================================
 
-
-    const language =
-      languageSelect.value;
-
-
-    conversation.push({
-      role: "user",
-      content: message
-    });
-
-
-    try {
-
-      controller =
-        new AbortController();
-
-
-      const {
-        data: {
-          session
-        }
-      } =
-        await supabaseClient.auth.getSession();
-
+  supabaseClient.auth.onAuthStateChange(
+    async (_event, session) => {
 
       if (!session) {
 
-        redirectToAdmin();
+        setConnection(
+          "غير مسجل",
+          "error"
+        );
 
         return;
       }
+    }
+  );
 
 
-      const response =
-        await fetch(
-          `${window.SUPABASE_URL}/functions/v1/${AI_FUNCTION_NAME}`,
-          {
-            method: "POST",
+  // =========================================================
+  // INIT
+  // =========================================================
 
-            headers: {
-              "Content-Type":
-                "application/json",
+  async function init() {
 
-              "Authorization":
-                `Bearer ${session.access_token}`,
+    if (
+      !SUPABASE_URL ||
+      !SUPABASE_ANON_KEY
+    ) {
 
-              "apikey":
-                window.SUPABASE_ANON_KEY
-            },
-
-            body: JSON.stringify({
-              message,
-              language,
-              history:
-                conversation.slice(
-                  -12
-                )
-            }),
-
-            signal:
-              controller.signal
-          }
-        );
-
-
-      const raw =
-        await response.text();
-
-
-      let data;
-
-      try {
-
-        data =
-          JSON.parse(raw);
-
-      } catch {
-
-        data = {
-          error:
-            raw ||
-            "رد غير صالح من الخادم."
-        };
-
-      }
-
-
-      if (!response.ok) {
-
-        throw new Error(
-          data.error ||
-          `HTTP ${response.status}`
-        );
-
-      }
-
-
-      const reply =
-        data.reply ||
-        data.message ||
-        data.output ||
-        "لم يصل رد من الذكاء الاصطناعي.";
-
-
-      conversation.push({
-        role: "assistant",
-        content: reply
-      });
-
-
-      appendMessage(
-        "assistant",
-        reply
+      setConnection(
+        "إعدادات Supabase ناقصة",
+        "error"
       );
 
+      addErrorMessage(
+        "راجع config.js وتأكد من SUPABASE_URL و SUPABASE_ANON_KEY."
+      );
 
-    } catch (error) {
-
-      if (
-        error.name ===
-        "AbortError"
-      ) {
-
-        appendMessage(
-          "assistant",
-          "تم إيقاف التوليد."
-        );
-
-      } else {
-
-        console.error(
-          "AI request error:",
-          error
-        );
-
-
-        appendMessage(
-          "assistant",
-          `حصل خطأ أثناء الاتصال بالـAI:
-
-${error.message}`
-        );
-
-      }
-
-    } finally {
-
-      controller = null;
-
-      isSending = false;
-
-      setLoading(false);
-
-    }
-
-  }
-
-
-  /* ---------------------------------------------------------
-     STOP
-  --------------------------------------------------------- */
-
-  function stopGeneration() {
-
-    if (controller) {
-      controller.abort();
-    }
-
-  }
-
-
-  /* ---------------------------------------------------------
-     NEW CHAT
-  --------------------------------------------------------- */
-
-  function newChat() {
-
-    if (isSending) {
       return;
     }
 
+    const allowed =
+      await checkAdminAccess();
 
-    conversation = [];
-
-
-    chatMessages.innerHTML = `
-      <article class="message assistant-message">
-
-        <div class="message-avatar">
-          AI
-        </div>
-
-        <div class="message-content">
-
-          <div class="message-meta">
-            AI DEVELOPER
-          </div>
-
-          <div class="message-text">
-
-            <h3>
-              محادثة جديدة.
-            </h3>
-
-            <p>
-              اكتب المشكلة البرمجية التي تريد حلها.
-            </p>
-
-          </div>
-
-        </div>
-
-      </article>
-    `;
-
-
-    messageInput.focus();
-
-  }
-
-
-  /* ---------------------------------------------------------
-     UI
-  --------------------------------------------------------- */
-
-  function setLoading(
-    loading
-  ) {
-
-    if (loading) {
-
-      typingIndicator.classList.remove(
-        "hidden"
-      );
-
-      sendBtn.classList.add(
-        "hidden"
-      );
-
-      stopBtn.classList.remove(
-        "hidden"
-      );
-
-      messageInput.disabled =
-        true;
-
-    } else {
-
-      typingIndicator.classList.add(
-        "hidden"
-      );
-
-      sendBtn.classList.remove(
-        "hidden"
-      );
-
-      stopBtn.classList.add(
-        "hidden"
-      );
-
-      messageInput.disabled =
-        false;
-
-      messageInput.focus();
-
-    }
-
-  }
-
-
-  function showConnection(
-    text,
-    connected
-  ) {
-
-    connectionStatus.textContent =
-      text;
-
-
-    connectionStatus.style.color =
-      connected
-        ? "#b89455"
-        : "#d99389";
-
-  }
-
-
-  /* ---------------------------------------------------------
-     MESSAGE
-  --------------------------------------------------------- */
-
-  function appendMessage(
-    role,
-    text
-  ) {
-
-    const article =
-      document.createElement(
-        "article"
-      );
-
-
-    article.className =
-      `message ${
-        role === "user"
-          ? "user-message"
-          : "assistant-message"
-      }`;
-
-
-    const avatar =
-      document.createElement(
-        "div"
-      );
-
-
-    avatar.className =
-      "message-avatar";
-
-
-    avatar.textContent =
-      role === "user"
-        ? "YOU"
-        : "AI";
-
-
-    const content =
-      document.createElement(
-        "div"
-      );
-
-
-    content.className =
-      "message-content";
-
-
-    const meta =
-      document.createElement(
-        "div"
-      );
-
-
-    meta.className =
-      "message-meta";
-
-
-    meta.textContent =
-      role === "user"
-        ? "DEVELOPER"
-        : "AI DEVELOPER";
-
-
-    const messageText =
-      document.createElement(
-        "div"
-      );
-
-
-    messageText.className =
-      "message-text";
-
-
-    renderMarkdownLike(
-      messageText,
-      text
-    );
-
-
-    content.appendChild(
-      meta
-    );
-
-    content.appendChild(
-      messageText
-    );
-
-
-    article.appendChild(
-      avatar
-    );
-
-    article.appendChild(
-      content
-    );
-
-
-    chatMessages.appendChild(
-      article
-    );
-
-
-    scrollChat();
-
-  }
-
-
-  /* ---------------------------------------------------------
-     SIMPLE MARKDOWN / CODE
-  --------------------------------------------------------- */
-
-  function renderMarkdownLike(
-    container,
-    text
-  ) {
-
-    const parts =
-      text.split(
-        /```([\s\S]*?)```/g
-      );
-
-
-    parts.forEach(
-      (part, index) => {
-
-        if (index % 2 === 1) {
-
-          let code =
-            part.trim();
-
-
-          let language =
-            "CODE";
-
-
-          const firstLine =
-            code.match(
-              /^([a-zA-Z0-9_+-]+)\n/
-            );
-
-
-          if (firstLine) {
-
-            language =
-              firstLine[1]
-                .toUpperCase();
-
-            code =
-              code.replace(
-                /^([a-zA-Z0-9_+-]+)\n/,
-                ""
-              );
-
-          }
-
-
-          const wrapper =
-            document.createElement(
-              "div"
-            );
-
-
-          wrapper.className =
-            "code-wrapper";
-
-
-          const header =
-            document.createElement(
-              "div"
-            );
-
-
-          header.className =
-            "code-header";
-
-
-          const languageLabel =
-            document.createElement(
-              "span"
-            );
-
-
-          languageLabel.textContent =
-            language;
-
-
-          const copyButton =
-            document.createElement(
-              "button"
-            );
-
-
-          copyButton.type =
-            "button";
-
-          copyButton.className =
-            "copy-code";
-
-          copyButton.textContent =
-            "نسخ الكود";
-
-
-          copyButton.dataset.code =
-            code;
-
-
-          const pre =
-            document.createElement(
-              "pre"
-            );
-
-
-          const codeElement =
-            document.createElement(
-              "code"
-            );
-
-
-          codeElement.textContent =
-            code;
-
-
-          pre.appendChild(
-            codeElement
-          );
-
-
-          header.appendChild(
-            languageLabel
-          );
-
-          header.appendChild(
-            copyButton
-          );
-
-
-          wrapper.appendChild(
-            header
-          );
-
-          wrapper.appendChild(
-            pre
-          );
-
-
-          container.appendChild(
-            wrapper
-          );
-
-
-        } else {
-
-          const fragment =
-            document.createDocumentFragment();
-
-
-          const lines =
-            part.split("\n");
-
-
-          lines.forEach(
-            line => {
-
-              const p =
-                document.createElement(
-                  "p"
-                );
-
-
-              p.textContent =
-                line;
-
-
-              fragment.appendChild(
-                p
-              );
-
-            }
-          );
-
-
-          container.appendChild(
-            fragment
-          );
-
-        }
-
-      }
-    );
-
-  }
-
-
-  /* ---------------------------------------------------------
-     COPY
-  --------------------------------------------------------- */
-
-  async function copyText(
-    text
-  ) {
-
-    try {
-
-      await navigator.clipboard.writeText(
-        text
-      );
-
-      showToast(
-        "تم نسخ الكود."
-      );
-
-    } catch {
-
-      showToast(
-        "تعذر نسخ الكود."
-      );
-
-    }
-
-  }
-
-
-  function handleChatClick(
-    event
-  ) {
-
-    const button =
-      event.target.closest(
-        ".copy-code"
-      );
-
-
-    if (!button) {
+    if (!allowed) {
       return;
     }
 
-
-    copyText(
-      button.dataset.code || ""
+    setConnection(
+      "متصل بـ QUESTION ARCHIVE",
+      "online"
     );
 
+    scrollToBottom();
   }
 
 
-  /* ---------------------------------------------------------
-     SCROLL
-  --------------------------------------------------------- */
-
-  function scrollChat() {
-
-    requestAnimationFrame(
-      () => {
-
-        chatMessages.scrollTop =
-          chatMessages.scrollHeight;
-
-      }
-    );
-
-  }
+  init();
 
 
-  /* ---------------------------------------------------------
-     TOAST
-  --------------------------------------------------------- */
+  // =========================================================
+  // OPTIONAL GLOBAL API
+  // =========================================================
 
-  function showToast(
-    message
-  ) {
+  window.QuestionArchiveAI = {
 
-    let region =
-      document.getElementById(
-        "toastRegion"
-      );
+    send:
+      handleSend,
 
+    stop:
+      stopGeneration,
 
-    if (!region) {
+    newChat:
+      startNewChat,
 
-      region =
-        document.createElement(
-          "div"
-        );
+    getHistory:
+      () => [...conversationHistory],
 
-      region.id =
-        "toastRegion";
+    getWebhookURL:
+      () => N8N_WEBHOOK_URL
 
-      region.style.position =
-        "fixed";
-
-      region.style.bottom =
-        "20px";
-
-      region.style.left =
-        "20px";
-
-      region.style.zIndex =
-        "9999";
-
-      document.body.appendChild(
-        region
-      );
-
-    }
-
-
-    const toast =
-      document.createElement(
-        "div"
-      );
-
-
-    toast.textContent =
-      message;
-
-
-    toast.style.background =
-      "#19110c";
-
-    toast.style.color =
-      "#d7c6a4";
-
-    toast.style.border =
-      "1px solid rgba(184,148,85,.35)";
-
-    toast.style.padding =
-      "10px 14px";
-
-    toast.style.borderRadius =
-      "6px";
-
-    toast.style.marginTop =
-      "8px";
-
-    toast.style.fontFamily =
-      "Cairo, sans-serif";
-
-
-    region.appendChild(
-      toast
-    );
-
-
-    setTimeout(
-      () => toast.remove(),
-      2500
-    );
-
-  }
+  };
 
 })();
