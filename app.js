@@ -77,3 +77,536 @@ function toast(m){const r=$("#toastRegion"),e=document.createElement("div");e.cl
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 function attr(v){return esc(v)}
 window.addEventListener("qa-language-change",()=>{const s=$("#searchInput");if(s)s.placeholder=QA_I18N.t("SEARCH_PLACEHOLDER");renderFilters();renderQuestions();renderChapters();renderContact();renderStats()});
+/* =========================================================
+   HOME AI DEVELOPER — n8n
+========================================================= */
+
+(() => {
+
+  const N8N_AI_URL =
+    "https://jane-loy.app.n8n.cloud/webhook/5e5a2910-d731-49b4-9217-c70938ca749c";
+
+  const messages =
+    document.getElementById("homeAiMessages");
+
+  const input =
+    document.getElementById("homeAiInput");
+
+  const send =
+    document.getElementById("homeAiSend");
+
+  const stop =
+    document.getElementById("homeAiStop");
+
+  const newChat =
+    document.getElementById("aiNewChat");
+
+  const typing =
+    document.getElementById("homeAiTyping");
+
+
+  if (!messages || !input || !send) {
+    return;
+  }
+
+
+  let history = [];
+  let controller = null;
+  let loading = false;
+
+
+  function escapeHTML(text) {
+
+    return String(text ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+
+  function addMessage(
+    text,
+    type
+  ) {
+
+    const message =
+      document.createElement("div");
+
+    message.className =
+      `ai-message ai-message-${type}`;
+
+
+    let formatted =
+      escapeHTML(text);
+
+
+    // Code blocks
+    formatted =
+      formatted.replace(
+        /```([\s\S]*?)```/g,
+        `
+        <div class="ai-code">
+          <div class="ai-code-header">
+            <span>CODE</span>
+          </div>
+          <pre>$1</pre>
+        </div>
+        `
+      );
+
+
+    // Inline code
+    formatted =
+      formatted.replace(
+        /`([^`]+)`/g,
+        "<code>$1</code>"
+      );
+
+
+    // Bold
+    formatted =
+      formatted.replace(
+        /\*\*(.*?)\*\*/g,
+        "<strong>$1</strong>"
+      );
+
+
+    // New lines
+    formatted =
+      formatted.replace(
+        /\n/g,
+        "<br>"
+      );
+
+
+    message.innerHTML = `
+
+      <div class="ai-message-label">
+        ${
+          type === "user"
+            ? "أنت"
+            : "AI DEVELOPER"
+        }
+      </div>
+
+      <div class="ai-message-text">
+        ${formatted}
+      </div>
+
+    `;
+
+
+    messages.appendChild(message);
+
+    messages.scrollTop =
+      messages.scrollHeight;
+  }
+
+
+  function setLoading(value) {
+
+    loading = value;
+
+    typing.classList.toggle(
+      "hidden",
+      !value
+    );
+
+    send.classList.toggle(
+      "hidden",
+      value
+    );
+
+    stop.classList.toggle(
+      "hidden",
+      !value
+    );
+
+    input.disabled = value;
+  }
+
+
+  function extractReply(data) {
+
+    if (!data) {
+      return "";
+    }
+
+
+    if (
+      typeof data === "string"
+    ) {
+      return data;
+    }
+
+
+    const possibleKeys = [
+      "reply",
+      "output",
+      "text",
+      "response",
+      "answer",
+      "message"
+    ];
+
+
+    for (
+      const key of possibleKeys
+    ) {
+
+      if (
+        typeof data[key] ===
+        "string"
+      ) {
+
+        return data[key];
+      }
+    }
+
+
+    if (data.data) {
+
+      return extractReply(
+        data.data
+      );
+    }
+
+
+    if (
+      Array.isArray(data) &&
+      data.length
+    ) {
+
+      return extractReply(
+        data[0]
+      );
+    }
+
+
+    return "";
+  }
+
+
+  async function sendMessage() {
+
+    if (loading) {
+      return;
+    }
+
+
+    const text =
+      input.value.trim();
+
+
+    if (!text) {
+      return;
+    }
+
+
+    addMessage(
+      text,
+      "user"
+    );
+
+
+    input.value = "";
+
+    input.style.height =
+      "auto";
+
+
+    history.push({
+
+      role: "user",
+
+      content: text
+
+    });
+
+
+    setLoading(true);
+
+
+    controller =
+      new AbortController();
+
+
+    try {
+
+      const response =
+        await fetch(
+          N8N_AI_URL,
+          {
+
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json",
+
+              "Accept":
+                "application/json"
+
+            },
+
+            body:
+              JSON.stringify({
+
+                message: text,
+
+                history:
+                  history.slice(-20),
+
+                language: "ar",
+
+                mode:
+                  "developer",
+
+                source:
+                  "question-archive-home"
+
+              }),
+
+            signal:
+              controller.signal
+
+          }
+        );
+
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          `n8n Error ${response.status}: ${errorText}`
+        );
+      }
+
+
+      const contentType =
+        response.headers.get(
+          "content-type"
+        ) || "";
+
+
+      let data;
+
+
+      if (
+        contentType.includes(
+          "application/json"
+        )
+      ) {
+
+        data =
+          await response.json();
+
+      } else {
+
+        data =
+          await response.text();
+      }
+
+
+      const reply =
+        extractReply(data);
+
+
+      if (!reply) {
+
+        throw new Error(
+          "لم يرجع n8n رد من الـ AI."
+        );
+      }
+
+
+      addMessage(
+        reply,
+        "bot"
+      );
+
+
+      history.push({
+
+        role: "assistant",
+
+        content: reply
+
+      });
+
+
+    } catch (error) {
+
+      if (
+        error.name ===
+        "AbortError"
+      ) {
+
+        addMessage(
+          "تم إيقاف الرد.",
+          "bot"
+        );
+
+      } else {
+
+        console.error(
+          "AI Error:",
+          error
+        );
+
+
+        addMessage(
+          "حصلت مشكلة في الاتصال بالـ AI. تأكد أن Workflow في n8n شغال وأن Webhook مضبوط.",
+          "bot"
+        );
+      }
+
+
+    } finally {
+
+      controller = null;
+
+      setLoading(false);
+
+      input.focus();
+    }
+  }
+
+
+  // Send
+  send.addEventListener(
+    "click",
+    sendMessage
+  );
+
+
+  // Stop
+  stop.addEventListener(
+    "click",
+    () => {
+
+      if (controller) {
+
+        controller.abort();
+      }
+    }
+  );
+
+
+  // Enter
+  input.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey
+      ) {
+
+        event.preventDefault();
+
+        sendMessage();
+      }
+    }
+  );
+
+
+  // Auto resize
+  input.addEventListener(
+    "input",
+    () => {
+
+      input.style.height =
+        "auto";
+
+      input.style.height =
+        `${Math.min(
+          input.scrollHeight,
+          150
+        )}px`;
+    }
+  );
+
+
+  // New chat
+  if (newChat) {
+
+    newChat.addEventListener(
+      "click",
+      () => {
+
+        history = [];
+
+        messages.innerHTML = `
+
+          <div class="ai-message ai-message-bot">
+
+            <div class="ai-message-label">
+              AI DEVELOPER
+            </div>
+
+            <div class="ai-message-text">
+
+              أهلاً بيك.
+
+              <br><br>
+
+              المحادثة بدأت من جديد.
+              اسألني عن البرمجة أو ابعت الكود
+              اللي محتاج مساعدة فيه.
+
+            </div>
+
+          </div>
+
+        `;
+
+        input.value = "";
+
+        input.focus();
+      }
+    );
+  }
+
+
+  // Quick prompts
+  document.addEventListener(
+    "click",
+    event => {
+
+      const button =
+        event.target.closest(
+          "[data-ai-home-prompt]"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      const prompt =
+        button.dataset.aiHomePrompt;
+
+
+      input.value =
+        prompt;
+
+
+      input.focus();
+
+
+      input.style.height =
+        "auto";
+
+      input.style.height =
+        `${input.scrollHeight}px`;
+    }
+  );
+
+})();
