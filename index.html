@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>QUESTION ARCHIVE</title>
-<meta name="description" content="أرشيف الأسئلة والإجابات والشروحات">
+<title>علم البرمجة — الأرشيف الدراسي</title>
+<meta name="description" content="الأرشيف الدراسي لعلم البرمجة — أسئلة وإجابات وشروحات مرتبة.">
 <link rel="icon" href="assets/images/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,11 +12,25 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="passwordGate" class="password-gate" aria-modal="true" role="dialog">
+  <div class="password-card">
+    <div class="password-mark">ع</div>
+    <span class="password-kicker">الأرشيف الدراسي</span>
+    <h1>علم البرمجة</h1>
+    <p>أدخل كلمة المرور للدخول إلى الأرشيف.</p>
+    <form id="passwordForm">
+      <label for="sitePassword">كلمة المرور</label>
+      <input id="sitePassword" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" required>
+      <button type="submit">دخول الأرشيف</button>
+      <small id="passwordError" aria-live="polite"></small>
+    </form>
+  </div>
+</div>
 <div class="film-grain"></div><div id="bubbles" class="bubbles"></div>
 
 <header class="site-header">
   <div class="container nav-wrap">
-    <a class="brand" href="#home"><span class="brand-mark">QA</span><span><strong>QUESTION</strong><small>ARCHIVE</small></span></a>
+    <a class="brand" href="#home"><span class="brand-mark">ع</span><span><strong>علم البرمجة</strong><small>الأرشيف الدراسي</small></span></a>
     <div class="nav-tools"><button id="languageToggle" class="language-toggle" type="button">EN</button><button id="menuToggle" class="menu-toggle" type="button" aria-expanded="false">☰</button></div>
     <nav class="main-nav" id="mainNav">
       <a href="#home" data-i18n="HOME">الرئيسية</a><a href="#questions" data-i18n="QUESTIONS">الأسئلة</a><a href="#chapters" data-i18n="CHAPTERS">الفصول</a><a href="#contact" data-i18n="CONTACT">تواصل معنا</a>
@@ -28,14 +42,14 @@
 <section class="hero">
  <div class="container hero-grid">
   <div class="hero-copy">
-   <div class="hero-kicker"><span></span><span data-i18n="CASE_FILE">ملف رقم 001 · الأرشيف التعليمي</span></div>
-   <h1>QUESTION<br><em>ARCHIVE</em></h1>
+   <div class="hero-kicker"><span></span><span data-i18n="CASE_FILE">ملف رقم 001 · الأرشيف الدراسي</span></div>
+   <h1>علم<br><em>البرمجة</em></h1>
    <p class="hero-lead" data-i18n="HERO_LEAD">مكان للأسئلة،<br>الإجابات والشروحات.</p>
    <p class="hero-description" data-i18n="HERO_DESC">أرشيف تعليمي شخصي مرتب علشان تراجع أسئلتك بسرعة ومن غير زحمة.</p>
    <a class="btn btn-gold" href="#questions"><span data-i18n="EXPLORE">استكشف الأسئلة</span><b>↙</b></a>
   </div>
   <div class="hero-file">
-   <div class="file-card"><div class="file-top"><span>ARCHIVE FILE</span><span>NO. 001</span></div><div class="file-seal">QA</div><div class="file-stamp">OPEN<br>ARCHIVE</div><div class="file-lines"><span>QUESTIONS</span><i></i><span>ANSWERS</span><i></i><span>EXPLANATIONS</span><i></i><span>REFERENCE</span><i></i></div><div class="file-bottom">EST. 2026 · PRIVATE STUDY ARCHIVE</div></div>
+   <div class="file-card"><div class="file-top"><span>STUDY ARCHIVE</span><span>NO. 001</span></div><div class="file-seal">ع</div><div class="file-stamp">OPEN<br>ARCHIVE</div><div class="file-lines"><span>QUESTIONS</span><i></i><span>ANSWERS</span><i></i><span>EXPLANATIONS</span><i></i><span>REFERENCE</span><i></i></div><div class="file-bottom">EST. 2026 · الأرشيف الدراسي</div></div>
   </div>
  </div>
 </section>
@@ -59,182 +73,64 @@
  </div>
 </section>
 
+
   <!-- =====================================================
-     AI DEVELOPER
-===================================================== -->
+       LEO AI — FLOATING ASSISTANT
+  ====================================================== -->
+  <button id="leoFab" class="leo-fab" type="button" aria-label="اسأل ليو" title="اسأل ليو">
+    <span class="leo-fab-orbit"></span>
+    <span class="leo-fab-icon">ل</span>
+    <span class="leo-fab-label">اسأل ليو</span>
+  </button>
 
-<section class="ai-section" id="ai">
-
-  <div class="ai-section-header">
-
-    <span class="ai-eyebrow">
-      AI DEVELOPER
-    </span>
-
-    <h2>
-      مساعد البرمجة
-    </h2>
-
-    <p>
-      اسأل عن البرمجة، الأكواد، الأخطاء، HTML، CSS،
-      JavaScript، Python، SQL، Supabase و n8n.
-    </p>
-
-  </div>
-
-
-  <div class="ai-chat-box">
-
-    <!-- HEADER -->
-
-    <div class="ai-chat-header">
-
-      <div class="ai-brand">
-
-        <div class="ai-status-dot"></div>
-
-        <div>
-          <strong>
-            AI DEVELOPER
-          </strong>
-
-          <span>
-            لايد اليمين لي معاذ 🙂😂
-          </span>
+  <div id="leoOverlay" class="leo-overlay" aria-hidden="true">
+    <div class="leo-backdrop" data-leo-close></div>
+    <aside class="leo-panel" role="dialog" aria-modal="true" aria-labelledby="leoTitle">
+      <div class="leo-panel-head">
+        <div class="leo-brand">
+          <div class="leo-avatar">ل</div>
+          <div>
+            <strong id="leoTitle">ليو</strong>
+            <span>مساعد علم البرمجة</span>
+          </div>
         </div>
-
+        <div class="leo-head-actions">
+          <button type="button" id="aiNewChat" class="ai-new-chat">محادثة جديدة</button>
+          <button type="button" class="leo-close" data-leo-close aria-label="إغلاق">×</button>
+        </div>
       </div>
 
-      <button
-        type="button"
-        id="aiNewChat"
-        class="ai-new-chat"
-      >
-        نبدا من لاول 😑
-      </button>
-
-    </div>
-
-
-    <!-- MESSAGES -->
-
-    <div
-      id="homeAiMessages"
-      class="ai-messages"
-    >
-
-      <div class="ai-message ai-message-bot">
-
-        <div class="ai-message-label">
-          AI DEVELOPER
-        </div>
-
-        <div class="ai-message-text">
-
-          اذيك ي قلب معاذ ..🫵🏻
-
-          <br><br>
-
-          أنا مساعد البرمجة الخاص بالمنصة.
-          ابعتلي أي سؤال متعلق بالبرمجة أو الكود
-          وأنا هساعدك فيه.
-
-        </div>
-
+      <div id="leoQuestionContext" class="leo-question-context">
+        <span>السؤال الحالي</span>
+        <strong>لم يتم اختيار سؤال بعد</strong>
       </div>
 
-    </div>
+      <div id="homeAiMessages" class="ai-messages">
+        <div class="ai-message ai-message-bot">
+          <div class="ai-message-label">ليو</div>
+          <div class="ai-message-text">أهلًا! أنا ليو. اختر «اسأل ليو» بجانب أي سؤال، وأنا هشرح لك السؤال المعروض خطوة بخطوة.</div>
+        </div>
+      </div>
 
+      <div id="homeAiTyping" class="ai-typing hidden">
+        <span></span><span></span><span></span>
+        <label>ليو بيجهز الإجابة...</label>
+      </div>
 
-    <!-- TYPING -->
+      <div class="ai-quick-actions">
+        <button type="button" data-ai-home-prompt="اشرح لي السؤال بطريقة بسيطة">اشرح السؤال</button>
+        <button type="button" data-ai-home-prompt="أنا مش فاهم السؤال، وضحه لي">أنا مش فاهم</button>
+        <button type="button" data-ai-home-prompt="حل السؤال مع توضيح الخطوات">حل السؤال</button>
+      </div>
 
-    <div
-      id="homeAiTyping"
-      class="ai-typing hidden"
-    >
-
-      <span></span>
-      <span></span>
-      <span></span>
-
-      <label>
-         استغفر ربك ونا هخلص 🤌🏻...
-      </label>
-
-    </div>
-
-
-    <!-- QUICK QUESTIONS -->
-
-    <div class="ai-quick-actions">
-
-      <button
-        type="button"
-        data-ai-home-prompt="اشرح لي HTML بطريقة بسيطة"
-      >
-        شرح HTML
-      </button>
-
-      <button
-        type="button"
-        data-ai-home-prompt="اشرح لي CSS للمبتدئين"
-      >
-        CSS
-      </button>
-
-      <button
-        type="button"
-        data-ai-home-prompt="اشرح لي JavaScript"
-      >
-        JavaScript
-      </button>
-
-      <button
-        type="button"
-        data-ai-home-prompt="ساعدني في حل مشكلة في الكود"
-      >
-        انا مش فاهم 🙂
-      </button>
-
-    </div>
-
-
-    <!-- INPUT -->
-
-    <div class="ai-composer">
-
-      <textarea
-        id="homeAiInput"
-        rows="1"
-        placeholder="اكتب سؤالك البرمجي هنا..."
-        autocomplete="off"
-      ></textarea>
-
-      <button
-        type="button"
-        id="homeAiSend"
-        class="ai-send-button"
-      >
-        ارسال
-      </button>
-
-      <button
-        type="button"
-        id="homeAiStop"
-        class="ai-stop-button hidden"
-      >
-        اصبر
-      </button>
-
-    </div>
-
-    <div class="ai-footer-note">
-      AI Developer — Powered by jane
-    </div>
-
+      <div class="ai-composer">
+        <textarea id="homeAiInput" rows="1" placeholder="اسأل ليو عن السؤال..." autocomplete="off"></textarea>
+        <button type="button" id="homeAiSend" class="ai-send-button">إرسال</button>
+        <button type="button" id="homeAiStop" class="ai-stop-button hidden">إيقاف</button>
+      </div>
+      <div class="ai-footer-note">ليو · مساعد علم البرمجة</div>
+    </aside>
   </div>
-
-</section>
 
 <section class="section chapters-section" id="chapters">
  <div class="container"><div class="section-heading"><div><p class="eyebrow">INDEX OF FILES</p><h2 data-i18n="CHAPTERS">الفصول</h2></div><span class="section-number">02 / 04</span></div><div id="chaptersGrid" class="chapters-grid"></div></div>
@@ -245,7 +141,7 @@
 <section class="section contact-section" id="contact"><div class="container contact-box"><div><p class="eyebrow" data-i18n="FINAL_NOTE">FINAL NOTE</p><h2 data-i18n="FOUND_PROBLEM">وجدت مشكلة؟</h2><p data-i18n="CONTACT_TEXT">لو لقيت خطأ في سؤال أو عندك مشكلة في المحتوى، تواصل معنا مباشرة.</p></div><div id="contactActions" class="contact-actions"><span class="state-message">جاري التحميل...</span></div></div></section>
 </main>
 
-<footer class="site-footer"><div class="container footer-grid"><div><strong>QUESTION ARCHIVE</strong><span id="footerText">© 2026 Question Archive</span></div><a href="#contact" data-i18n="CONTACT">تواصل معنا</a></div></footer>
+<footer class="site-footer"><div class="container footer-grid"><div><strong>علم البرمجة</strong><span id="footerText">© 2026 الأرشيف الدراسي</span></div><a href="#contact" data-i18n="CONTACT">تواصل معنا</a></div></footer>
 <div id="toastRegion" class="toast-region" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
